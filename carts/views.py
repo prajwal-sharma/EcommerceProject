@@ -19,13 +19,20 @@ def add_cart(request, product_id):
     product = Product.objects.get(id=product_id)  # get the object
 
     if current_user.is_authenticated:
-        cart = Cart.objects.filter(cart__user=current_user)
+        print("I AM LOGGED IN")
+        try:
+            cart = Cart.objects.filter(cart__user=current_user)
+            if cart[0] is None:
+                pass
+        except IndexError:
+            cart = Cart.objects.create(cart_id=_cart_id(request))
+            print("asfdsfasfasdfasdfasd")
         product_variation = []
         if request.method == 'POST':
             for item in request.POST:
                 key = item
                 value = request.POST.get(key)
-                print(key, ":", value)
+                # print(key, ":", value)
                 try:
                     variation = Variation.objects.get(product=product, variation_category__iexact=key,
                                                       variation_value__iexact=value)
@@ -66,7 +73,7 @@ def add_cart(request, product_id):
             cart_item = CartItem.objects.create(
                 product=product,
                 user=current_user,
-                cart=cart[0],
+                cart=cart,
                 quantity=1,
             )
             print("yes 2 logged")
@@ -77,6 +84,7 @@ def add_cart(request, product_id):
             cart_item.save()
         return redirect('cart')
     else:
+        print("IM A lOGGED OUT")
         product_variation = []
         if request.method == 'POST':
             for item in request.POST:
@@ -103,9 +111,9 @@ def add_cart(request, product_id):
             cart_items = CartItem.objects.filter(product=product, cart=cart)
             for cart_item in cart_items:
                 product_variation.sort(key=lambda x: x.variation_category)
-                print(product_variation == list(cart_item.variations.all().order_by('variation_category')))
-                print(product_variation)
-                print(list(cart_item.variations.all().order_by('variation_category')))
+                # print(product_variation == list(cart_item.variations.all().order_by('variation_category')))
+                # print(product_variation)
+                # print(list(cart_item.variations.all().order_by('variation_category')))
                 if product_variation == list(cart_item.variations.all().order_by('variation_category')):
                     if len(product_variation) > 0:
                         cart_item.quantity += 1
